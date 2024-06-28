@@ -23,6 +23,7 @@ import { Post } from "./entity/Post"
 import { Raw } from "../../../../src/find-options/operator/Raw"
 import { PersonAR } from "./entity/PersonAR"
 import { expect } from "chai"
+import { Unaccent } from "../../../../src/find-options/operator/Unaccent"
 
 describe("repository > find options > operators", () => {
     let connections: DataSource[]
@@ -352,6 +353,32 @@ describe("repository > find options > operators", () => {
                 loadedPosts.should.be.eql([
                     { id: 1, likes: 12, title: "about #1" },
                     { id: 2, likes: 3, title: "ABOUT #2" },
+                ])
+            }),
+        ))
+
+    it("unaccent", () =>
+        Promise.all(
+            connections.map(async (connection) => {
+                // insert some fake data
+                const post1 = new Post()
+                post1.title = "élonia #1"
+                post1.likes = 12
+                await connection.manager.save(post1)
+                const post2 = new Post()
+                post2.title = "elonia #2"
+                post2.likes = 3
+                await connection.manager.save(post2)
+
+                // check operator
+                const loadedPosts = await connection
+                    .getRepository(Post)
+                    .findBy({
+                        title: Unaccent("%elonia #%"),
+                    })
+                loadedPosts.length.should.be.eql([
+                    { id: 1, likes: 12, title: "élonia #1" },
+                    { id: 2, likes: 3, title: "elonia #2" },
                 ])
             }),
         ))

@@ -522,7 +522,10 @@ export abstract class QueryBuilder<Entity extends ObjectLiteral> {
      * Uses same query runner as current QueryBuilder.
      */
     createQueryBuilder(queryRunner?: QueryRunner): this {
-        return new (this.constructor as any)(this.connection, queryRunner ?? this.queryRunner)
+        return new (this.constructor as any)(
+            this.connection,
+            queryRunner ?? this.queryRunner,
+        )
     }
 
     /**
@@ -1071,6 +1074,8 @@ export abstract class QueryBuilder<Entity extends ObjectLiteral> {
         const { driver } = this.connection
 
         switch (condition.operator) {
+            case "unaccent":
+                return `unaccent(${condition.parameters[0]})`
             case "lessThan":
                 return `${condition.parameters[0]} < ${condition.parameters[1]}`
             case "lessThanOrEqual":
